@@ -1,0 +1,9 @@
+{
+	"description": "CHIP-8 interpreter.",
+	"license": "MIT",
+	"authors": [
+		"William Watson"
+	],
+	"copyright": "Copyright © 2026, William Watson",
+	"name": "chip8-interpreter"
+}
