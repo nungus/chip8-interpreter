@@ -87,15 +87,6 @@ struct Chip8 {
 		return stack[SP--];
 	}
 
-	// Index of register `x` from instruction form `-x--`.
-	ubyte x(ushort opcode) {
-		return V[(opcode & 0xF00) >> 8];
-	}
-	// Index of register `y` from instruction form `--y-`.
-	ubyte y(ushort opcode) {
-		return V[(opcode & 0xF0) >> 4];
-	}
-
 	// Dunno how this will be shaped. For now, defining it like this, assuming
 	// it just needs the bitmap.
 	// I also don't know when this will be called. I assume just call once
@@ -108,6 +99,12 @@ struct Chip8 {
 	void executeInstruction() {
 		ushort opcode = (memory[PC] << 8) | (memory[PC + 1]);
 		
+		ubyte x = (opcode & 0xF00) >> 8;
+		ubyte y = (opcode & 0xF0) >> 4;
+		ushort nnn = opcode & 0xFFF;
+		ubyte kk = opcode & 0xFF;
+		ubyte n = opcode & 0xF;
+
 		// TODO: maybe document instructions...
 		switch (opcode & 0xF000) {
 			case 0x0000:
@@ -123,37 +120,35 @@ struct Chip8 {
 				}
 				break;
 			case 0x1000:
-				PC = opcode & 0xFFF;
+				PC = nnn;
 				return;
 			case 0x2000:
 				PC += INSTR_SIZE;
 				stackPush(PC);
-				PC = opcode & 0xFFF; // TODO: Could rearrange to do fall-through for the above case, not going to rn.
+				PC = nnn; // TODO: Could rearrange to do fall-through for the above case, not going to rn.
 				return;
 			case 0x3000:
-				if (V[x(opcode)] == (opcode & 0xFF)) {
+				if (V[x] == kk) {
 					PC += INSTR_SIZE;
 				}
 				break;
 			case 0x4000:
-				if (V[x(opcode)] != (opcode & 0xFF)) {
+				if (V[x] != kk) {
 					PC += INSTR_SIZE;
 				}
 				break;
 			case 0x5000:
-				if (V[x(opcode)] == V[y(opcode)]) {
+				if (V[x] == V[y]) {
 					PC += INSTR_SIZE;
 				}
 				break;
 			case 0x6000:
-				V[x(opcode)] = opcode & 0xFF;
+				V[x] = kk;
 				break;
 			case 0x7000:
-				V[x(opcode)] += opcode & 0xFF;
+				V[x] += kk;
 				break;
 			case 0x8000:
-				ubyte x = x(opcode);
-				ubyte y = y(opcode);
 				switch (opcode & 0xF) {
 					case 0:
 						V[x] = V[y];
@@ -193,23 +188,21 @@ struct Chip8 {
 				}
 				break;
 			case 0x9000:
-				if (V[x(opcode)] != V[y(opcode)]) {
+				if (V[x] != V[y]) {
 					PC += INSTR_SIZE;
 				}
 				break;
 			case 0xA000:
-				I = opcode & 0xFFF;
+				I = nnn;
 				break;
 			case 0xB000:
-				PC = opcode & 0xFFF + V[0];
+				PC = cast(ushort) (nnn + V[0]);
 				break;
 			case 0xC000:
-				V[x(opcode)] = opcode & 0xFF & uniform(0, 256, rnd);
+				V[x] = kk & uniform(0, 256, rnd);
 				break;
 			case 0xD000:
-				ubyte n = opcode & 0xF;
-				ubyte[] sprBytes = memory[I .. I + 8*n];
-				V[0xF] = fb.drawSprite(sprBytes, x(opcode), y(opcode));
+				V[0xF] = fb.drawSprite(memory[I .. I + 8*n], x, y);
 				break;
 			default:
 				throw new Exception("The");
