@@ -1,4 +1,6 @@
 import std.conv : to;
+import core.time;
+import core.thread;
 import std.file;
 import std.stdio;
 import std.random;
@@ -29,7 +31,7 @@ struct Framebuffer {
 	void cls() {
 		for (int i = 0; i < BITMAP_W_BYTES; i++) {
 			for (int j = 0; j < BITMAP_H_PX; j++) {
-				bitmap[i][j] = 0;
+				bitmap[j][i] = 0;
 			}
 		}
 	}
@@ -202,7 +204,8 @@ struct Chip8 {
 				V[x] = kk & uniform(0, 256, rnd);
 				break;
 			case 0xD000:
-				V[0xF] = fb.drawSprite(memory[I .. I + 8*n], x, y);
+				V[0xF] = fb.drawSprite(memory[I .. I + n], V[x], V[y]);
+				writeln(fb.bitmapPretty());
 				break;
 			default:
 				throw new Exception("The");
@@ -235,12 +238,16 @@ void main(string[] args) {
 	loadROM(chip, args[1]);
 	writeln("Loaded program.");
 	Framebuffer fb;
-	writeln(fb.bitmapPretty());
-	// writeln(fb.bitmap);
-	auto the = fb.drawSprite(cast(ubyte[]) [255, 1, 17, 69, 137, 255, 255, 255], 17, 8);
-	auto the2 = fb.drawSprite(cast(ubyte[]) [255, 255, 255, 66], 65, 6);
-	auto the3 = fb.drawSprite(cast(ubyte[]) [255, 255, 255, 66], 10, 6);
-	writeln(the, the2, the3);
-	writeln();
-	writeln(fb.bitmapPretty());
+	// writeln(fb.bitmapPretty());
+	// // writeln(fb.bitmap);
+	// auto the = fb.drawSprite(cast(ubyte[]) [255, 1, 17, 69, 137, 255, 255, 255], 17, 8);
+	// auto the2 = fb.drawSprite(cast(ubyte[]) [255, 255, 255, 66], 65, 6);
+	// auto the3 = fb.drawSprite(cast(ubyte[]) [255, 255, 255, 66], 10, 6);
+	// writeln(the, the2, the3);
+	// writeln();
+	// writeln(fb.bitmapPretty());
+	while (true) {
+		chip.executeInstruction();
+		Thread.sleep(1.msecs);
+	}
 }
