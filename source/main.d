@@ -61,6 +61,10 @@ struct Framebuffer {
 	}
 }
 
+const int ROM_MEMORY_BEGIN = 0x200;
+const int MEMORY_END = 0xFFF;
+const ubyte INSTR_SIZE = 2;
+
 struct Chip8 {
 	ubyte[4096] memory; // 0x000 -> 0x1FF: Location of original interpreter.
 	ubyte[16] V; // Registers.
@@ -104,6 +108,7 @@ struct Chip8 {
 	void executeInstruction() {
 		ushort opcode = (memory[PC] << 8) | (memory[PC + 1]);
 		
+		// TODO: maybe document instructions...
 		switch (opcode & 0xF000) {
 			case 0x0000:
 				switch (opcode & 0xFFF) {
@@ -112,32 +117,32 @@ struct Chip8 {
 						break;
 					case 0x0EE:
 						PC = stackPop();
-						break;
+						return;
 					default:
 						// 0nnn case. Do nothing.
 				}
 				break;
 			case 0x1000:
 				PC = opcode & 0xFFF;
-				break;
+				return;
 			case 0x2000:
-				PC += INSTRUCTION_NUM_BYTES;
+				PC += INSTR_SIZE;
 				stackPush(PC);
 				PC = opcode & 0xFFF; // TODO: Could rearrange to do fall-through for the above case, not going to rn.
-				break;
+				return;
 			case 0x3000:
 				if (V[x(opcode)] == (opcode & 0xFF)) {
-					PC += 2 * INSTRUCTION_NUM_BYTES;
+					PC += INSTR_SIZE;
 				}
 				break;
 			case 0x4000:
 				if (V[x(opcode)] != (opcode & 0xFF)) {
-					PC += 2 * INSTRUCTION_NUM_BYTES;
+					PC += INSTR_SIZE;
 				}
 				break;
 			case 0x5000:
 				if (V[x(opcode)] == V[y(opcode)]) {
-					PC += 2 * INSTRUCTION_NUM_BYTES;
+					PC += INSTR_SIZE;
 				}
 				break;
 			case 0x6000:
@@ -189,7 +194,7 @@ struct Chip8 {
 				break;
 			case 0x9000:
 				if (V[x(opcode)] != V[y(opcode)]) {
-					PC += 2 * INSTRUCTION_NUM_BYTES;
+					PC += INSTR_SIZE;
 				}
 				break;
 			case 0xA000:
@@ -209,12 +214,9 @@ struct Chip8 {
 			default:
 				throw new Exception("The");
 		}
+		PC += INSTR_SIZE;
 	}
 }
-
-const int ROM_MEMORY_BEGIN = 0x200;
-const int MEMORY_END = 0xFFF;
-const ubyte INSTRUCTION_NUM_BYTES = 2; 
 
 
 // Load ROM program and load into memory, starting at 0x200.
@@ -244,7 +246,7 @@ void main(string[] args) {
 	// writeln(fb.bitmap);
 	auto the = fb.drawSprite(cast(ubyte[]) [255, 1, 17, 69, 137, 255, 255, 255], 17, 8);
 	auto the2 = fb.drawSprite(cast(ubyte[]) [255, 255, 255, 66], 65, 6);
-	auto the3 = fb.drawSprite(cast(ubyte[]) [255, 255, 255, 66], 23, 5);
+	auto the3 = fb.drawSprite(cast(ubyte[]) [255, 255, 255, 66], 10, 6);
 	writeln(the, the2, the3);
 	writeln();
 	writeln(fb.bitmapPretty());
