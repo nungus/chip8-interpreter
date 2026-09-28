@@ -1,9 +1,12 @@
 {
 	"description": "CHIP-8 interpreter.",
-	"license": "MIT",
+	"dependencies": {
+		"bindbc-sdl": "~>2.4.4"
+	},
 	"authors": [
 		"William Watson"
 	],
 	"copyright": "Copyright © 2026, William Watson",
+	"license": "MIT",
 	"name": "chip8-interpreter"
 }

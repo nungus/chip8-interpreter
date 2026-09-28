@@ -15,4 +15,4 @@ chip8-interpreter-test-*
 *.o
 *.obj
 *.lst
-long_program
+SDL3.dll
