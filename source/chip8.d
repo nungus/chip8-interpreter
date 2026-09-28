@@ -5,6 +5,8 @@ import std.random;
 const int ROM_MEMORY_BEGIN = 0x200;
 const int MEMORY_END = 0xFFF;
 const ubyte INSTR_SIZE = 2;
+const int LOGICAL_WIDTH = 64;
+const int LOGICAL_HEIGHT = 32;
 
 struct Framebuffer {
 	const BITMAP_W_BYTES = 8;
@@ -25,9 +27,9 @@ struct Framebuffer {
 	}
 
 	void cls() {
-		for (int i = 0; i < BITMAP_W_BYTES; i++) {
-			for (int j = 0; j < BITMAP_H_PX; j++) {
-				bitmap[j][i] = 0;
+		for (int i = 0; i < BITMAP_H_PX; i++) {
+		    for (int j = 0; j < BITMAP_W_BYTES; j++) {
+				bitmap[i][j] = 0;
 			}
 		}
 	}
@@ -41,7 +43,7 @@ struct Framebuffer {
 		ubyte xByteLeft = (x % (8 * BITMAP_W_BYTES)) / 8;
 		ubyte xByteRight = cast(ubyte) (xByteLeft + 1) % BITMAP_W_BYTES;
 		ubyte xByteOffset = x % 8;
-		bool causedPixelErasure = 0; // Pixel erasure flag.
+		bool causedPixelErasure = 0;
 		for (int i = 0; i < sprBytes.length; i++) {
 			auto y_i = (y + i) % BITMAP_H_PX;
 
@@ -61,6 +63,7 @@ struct Framebuffer {
 
 struct IOState {
 	bool keepExecuting = true;
+    bool displayDirty = false; // Set when bitmap is modified with Dxyn. Purpose is to signal a display update. NOT cleared by the CHIP-8.
 	ubyte[16] keys;
 }
 
@@ -102,6 +105,7 @@ struct Chip8 {
 				switch (nnn) {
 					case 0x0E0:
 						fb.cls();
+                        ioState.displayDirty = true;
 						break;
 					case 0x0EE:
 						PC = stackPop();
@@ -194,6 +198,7 @@ struct Chip8 {
 				break;
 			case 0xD000:
 				V[0xF] = fb.drawSprite(memory[I .. I + n], V[x], V[y]);
+                ioState.displayDirty = true;
 				break;
 			default:
 				throw new Exception("The");

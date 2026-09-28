@@ -8,6 +8,6 @@ import std.file;
 interface Display {
     bool init();
     void exit();
-    void update(ubyte[8][32] bitmap);
+    void update(ref ubyte[8][32] bitmap);
     void doEventPolling(ref IOState ioState);
 }

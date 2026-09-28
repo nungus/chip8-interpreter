@@ -24,6 +24,10 @@ int main(string[] args) {
 		// TODO: Time execution, choose appropriate target num. instrs / sec.
 		display.doEventPolling(chip.ioState);
 		chip.executeInstruction();
+		if (chip.ioState.displayDirty) {
+			display.update(chip.fb.bitmap);
+			chip.ioState.displayDirty = false;
+		}
 		Thread.sleep(1.msecs);
 	}
 	display.exit();
