@@ -1,6 +1,8 @@
+import std.algorithm.searching : countUntil;
 import std.conv : to;
 import std.file;
 import std.random;
+
 
 const int ROM_MEMORY_BEGIN = 0x200;
 const int MEMORY_END = 0xFFF;
@@ -64,7 +66,7 @@ struct Framebuffer {
 struct IOState {
 	bool keepExecuting = true;
     bool displayDirty = false; // Set when bitmap is modified with Dxyn. Purpose is to signal a display update. NOT cleared by the CHIP-8.
-	ubyte[16] keys; // 1 when down, 0 when up.
+	ubyte[16] keyDown; // 1 when down, 0 when up.
 }
 
 struct Chip8 {
@@ -76,6 +78,8 @@ struct Chip8 {
 	ushort PC = ROM_MEMORY_BEGIN;
 	byte SP = -1;
 	ushort[16] stack;
+    ubyte DT; // Delay timer.
+    ubyte ST; // Sound timer.
 
 	Framebuffer fb;
 	IOState ioState;
@@ -200,6 +204,48 @@ struct Chip8 {
 				V[0xF] = fb.drawSprite(memory[I .. I + n], V[x], V[y]);
                 ioState.displayDirty = true;
 				break;
+            case 0xE000:
+                switch (kk) {
+                    case 0x9E:
+                        if (ioState.keyDown[V[x]]) {
+                            PC += INSTR_SIZE;
+                        }
+                        break;
+                    case 0xA1:
+                        if (!ioState.keyDown[V[x]]) {
+                            PC += INSTR_SIZE;
+                        }
+                        break;
+                    default:
+                }
+                break;
+            case 0xF000:
+                switch (kk) {
+                    case 0x07:
+                        V[x] = DT;
+                        break;
+                    case 0x0A:
+                        ubyte keyInd = cast(ubyte) ioState.keyDown[].countUntil(1);
+                        if (keyInd != -1) {
+                            V[x] = keyInd;
+                        } else {
+                            // Force execution to stop until a key is pressed.
+                            // (PC doesn't move.)
+                            return;
+                        }
+                        break;
+                    case 0x15:
+                        DT = V[x];
+                        break;
+                    case 0x18:
+                        ST = V[x];
+                        break;
+                    case 0x1E:
+                        I += V[x];
+                        break;
+                    default:
+                }
+                break;
 			default:
 				throw new Exception("The");
 		}

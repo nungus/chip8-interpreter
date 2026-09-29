@@ -29,7 +29,7 @@ int main(string[] args) {
 			display.update(chip.fb.bitmap);
 			chip.ioState.displayDirty = false;
 		}
-		writeln("Keypad: ", chip.ioState.keys);
+		writeln("Keypad: ", chip.ioState.keyDown);
 		Thread.sleep(1.msecs);
 	}
 	display.exit();
