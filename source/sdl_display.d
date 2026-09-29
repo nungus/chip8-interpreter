@@ -7,11 +7,11 @@ import bindbc.loader;
 import std.stdio;
 
 class SdlDisplay : Display {
-    const auto WINDOW_WIDTH = 640;
-    const auto WINDOW_HEIGHT = 320;
+    auto WINDOW_WIDTH = 64 * 15;
+    auto WINDOW_HEIGHT = 32 * 15;
 
     const uint ON_COLOUR = 0xFFFFFFFF;
-    const uint OFF_COLOUR = 0x00000000;
+    const uint OFF_COLOUR = 0x000000FF;
     
     SDL_Window *window;
     SDL_Renderer *renderer;
@@ -42,12 +42,20 @@ class SdlDisplay : Display {
             SDL_Log("Couldn't create streaming texture: %s", SDL_GetError());
             return false;
         }
+        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
         return true;
     }
 
     void exit() {
         SDL_DestroyWindow(window);
 	    SDL_Quit();
+    }
+
+    private void redraw() {
+        SDL_SetRenderDrawColor(renderer, 12, 12, 12, 255);
+        SDL_RenderClear(renderer);
+        SDL_RenderTexture(renderer, texture, null, null);
+        SDL_RenderPresent(renderer);
     }
 
     // Unfortunately because modern GPU texture pipelines don't support
@@ -64,9 +72,7 @@ class SdlDisplay : Display {
             }
         }
         SDL_UpdateTexture(texture, null, pixels.ptr, LOGICAL_WIDTH * uint.sizeof);
-        SDL_RenderClear(renderer);
-        SDL_RenderTexture(renderer, texture, null, null);
-        SDL_RenderPresent(renderer);
+        redraw();
     }
 
     void doEventPolling(ref IOState ioState) {
@@ -78,6 +84,10 @@ class SdlDisplay : Display {
 				case SDL_EVENT_QUIT:
 					ioState.keepExecuting = false;
 					break;
+                case SDL_EVENT_WINDOW_RESIZED:
+                    SDL_GetWindowSizeInPixels(window, &WINDOW_WIDTH, &WINDOW_HEIGHT);
+                    redraw();
+                    break;
 				default:
 					// writeln("Unidentified SDL event: ", event.type); 
 			}

@@ -25,6 +25,7 @@ int main(string[] args) {
 		display.doEventPolling(chip.ioState);
 		chip.executeInstruction();
 		if (chip.ioState.displayDirty) {
+			writeln("Redrawing framebuffer.");
 			display.update(chip.fb.bitmap);
 			chip.ioState.displayDirty = false;
 		}
