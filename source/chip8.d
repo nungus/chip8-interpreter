@@ -105,7 +105,7 @@ struct Chip8 {
 
     private static ubyte[4096] initMem() {
         ubyte[4096] mem;
-        mem[0 .. digitData.length] = digitData[];
+        mem[0 .. digitData.sizeof] = digitData[];
         return mem;
     }
 
@@ -154,7 +154,7 @@ struct Chip8 {
 			case 0x2000:
 				PC += INSTR_SIZE;
 				stackPush(PC);
-				PC = nnn; // TODO: Could rearrange to do fall-through for the above case, not going to rn.
+				PC = nnn;
 				return;
 			case 0x3000:
 				if (V[x] == kk) {
@@ -226,7 +226,7 @@ struct Chip8 {
 				break;
 			case 0xB000:
 				PC = cast(ushort) (nnn + V[0]);
-				break;
+				return;
 			case 0xC000:
 				V[x] = kk & uniform(0, 256, rnd);
 				break;
@@ -255,9 +255,9 @@ struct Chip8 {
                         V[x] = DT;
                         break;
                     case 0x0A:
-                        ubyte keyInd = cast(ubyte) ioState.keyDown[].countUntil(1);
+                        auto keyInd = ioState.keyDown[].countUntil(1);
                         if (keyInd != -1) {
-                            V[x] = keyInd;
+                            V[x] = cast(ubyte) keyInd;
                         } else {
                             // Force execution to stop until a key is pressed.
                             // (PC doesn't move.)
@@ -275,6 +275,19 @@ struct Chip8 {
                         break;
                     case 0x29:
                         I = V[x] * 5;
+                        break;
+                    case 0x33:
+                        ubyte val = V[x];
+                        foreach_reverse (i; 0 .. 3) {
+                            memory[I + i] = val % 10;
+                            val /= 10;
+                        }
+                        break;
+                    case 0x55:
+                        memory[I .. I + (x + 1) * ubyte.sizeof] = V[0 .. x + 1];
+                        break;
+                    case 0x65:
+                        V[0 .. x + 1] = memory[I .. I + (x + 1)];
                         break;
                     default:
                 }

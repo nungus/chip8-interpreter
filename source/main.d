@@ -23,7 +23,9 @@ int main(string[] args) {
 	while (chip.ioState.keepExecuting) {
 		// TODO: Time execution, choose appropriate target num. instrs / sec.
 		display.doEventPolling(chip.ioState);
-		chip.executeInstruction();
+		foreach (t; 0 .. 700) {
+			chip.executeInstruction();
+		}
 		if (chip.ioState.displayDirty) {
 			writeln("Redrawing framebuffer.");
 			display.update(chip.fb.bitmap);
