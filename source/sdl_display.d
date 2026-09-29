@@ -17,6 +17,25 @@ class SdlDisplay : Display {
     SDL_Renderer *renderer;
     SDL_Texture *texture;
 
+    const ubyte[SDL_Scancode] scancodeToKeypad = [
+        SDL_SCANCODE_1: 0x1,
+        SDL_SCANCODE_2: 0x2,
+        SDL_SCANCODE_3: 0x3,
+        SDL_SCANCODE_4: 0xC,
+        SDL_SCANCODE_Q: 0x4,
+        SDL_SCANCODE_W: 0x5,
+        SDL_SCANCODE_E: 0x6,
+        SDL_SCANCODE_R: 0xD,
+        SDL_SCANCODE_A: 0x7,
+        SDL_SCANCODE_S: 0x8,
+        SDL_SCANCODE_D: 0x9,
+        SDL_SCANCODE_F: 0xE,
+        SDL_SCANCODE_Z: 0xA,
+        SDL_SCANCODE_X: 0x0,
+        SDL_SCANCODE_C: 0xB,
+        SDL_SCANCODE_V: 0xF,
+    ];
+
     bool init() {
         LoadMsg ret = loadSDL();
         if (ret != LoadMsg.success) {
@@ -31,7 +50,7 @@ class SdlDisplay : Display {
 		    SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
             return false;
         }
-        if (!SDL_CreateWindowAndRenderer("CHIP-8", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
+        if (!SDL_CreateWindowAndRenderer("CHIP-8 by nungus", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
             SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
             return false;
         }
@@ -79,8 +98,18 @@ class SdlDisplay : Display {
         SDL_Event event;
 
 		while (SDL_PollEvent(&event)) {
-            writeln("SDL event: ", event.type);
+            // writeln("SDL event: ", event.type);
 			switch (event.type) {
+                case SDL_EVENT_KEY_DOWN:
+                    if (event.key.scancode in scancodeToKeypad) {
+                        ioState.keys[scancodeToKeypad[event.key.scancode]] = 1;
+                    }
+                    break;
+                case SDL_EVENT_KEY_UP:
+                    if (event.key.scancode in scancodeToKeypad) {
+                        ioState.keys[scancodeToKeypad[event.key.scancode]] = 0;
+                    }
+                    break;
 				case SDL_EVENT_QUIT:
 					ioState.keepExecuting = false;
 					break;
@@ -93,5 +122,4 @@ class SdlDisplay : Display {
 			}
 		}
     }
-    
 }

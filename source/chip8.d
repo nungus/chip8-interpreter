@@ -64,7 +64,7 @@ struct Framebuffer {
 struct IOState {
 	bool keepExecuting = true;
     bool displayDirty = false; // Set when bitmap is modified with Dxyn. Purpose is to signal a display update. NOT cleared by the CHIP-8.
-	ubyte[16] keys;
+	ubyte[16] keys; // 1 when down, 0 when up.
 }
 
 struct Chip8 {
