@@ -7,7 +7,7 @@ import display;
 
 
 int main(string[] args) {
-	Chip8 chip;
+	Chip8 chip = Chip8.create();
 	writeln("HELLO YELLO! I'm CHIPPY-8! >:D");
 	loadROM(chip, args[1]);
 	writeln("Loaded program.");
@@ -29,7 +29,7 @@ int main(string[] args) {
 			display.update(chip.fb.bitmap);
 			chip.ioState.displayDirty = false;
 		}
-		writeln("Keypad: ", chip.ioState.keyDown);
+		// writeln("Keypad: ", chip.ioState.keyDown);
 		Thread.sleep(1.msecs);
 	}
 	display.exit();

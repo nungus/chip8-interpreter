@@ -70,26 +70,56 @@ struct IOState {
 }
 
 struct Chip8 {
-	ubyte[4096] memory; // 0x000 -> 0x1FF: Location of original interpreter.
+	ubyte[4096] memory = initMem(); // 0x000 -> 0x1FF: Location of original interpreter.
 	ubyte[16] V; // Registers.
 	ushort I;
-	ubyte delayReg;
-	ubyte soundReg;
+    ubyte DT; // Delay timer.
+    ubyte ST; // Sound timer.
 	ushort PC = ROM_MEMORY_BEGIN;
 	byte SP = -1;
 	ushort[16] stack;
-    ubyte DT; // Delay timer.
-    ubyte ST; // Sound timer.
 
 	Framebuffer fb;
 	IOState ioState;
 
-	auto rnd = Random();
+	Random rnd;
 
-	void stackPush(ushort value) {
+    static const ubyte[80] digitData = [
+        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+        0x20, 0x60, 0x20, 0x20, 0x70, // 1
+        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+        0xF0, 0x80, 0xF0, 0x80, 0x80, // F
+    ];
+
+    private static ubyte[4096] initMem() {
+        ubyte[4096] mem;
+        mem[0 .. digitData.length] = digitData[];
+        return mem;
+    }
+
+    static Chip8 create() {
+        Chip8 chip;
+        chip.rnd = Random(unpredictableSeed);
+        // Memory is initialised statically.
+        return chip;
+    }
+
+	private void stackPush(ushort value) {
 		stack[++SP] = value;
 	}
-	ushort stackPop() {
+	private ushort stackPop() {
 		return stack[SP--];
 	}
 
@@ -242,6 +272,9 @@ struct Chip8 {
                         break;
                     case 0x1E:
                         I += V[x];
+                        break;
+                    case 0x29:
+                        I = V[x] * 5;
                         break;
                     default:
                 }
