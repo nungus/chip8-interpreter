@@ -5,6 +5,7 @@ import std.stdio;
 import chip8;
 import display;
 
+const int INSTRS_PER_TICK = 10;
 
 int main(string[] args) {
 	Chip8 chip = Chip8.create();
@@ -23,15 +24,17 @@ int main(string[] args) {
 	while (chip.ioState.keepExecuting) {
 		// TODO: Time execution, choose appropriate target num. instrs / sec.
 		display.doEventPolling(chip.ioState);
-		foreach (t; 0 .. 700) {
+		foreach (t; 0 .. INSTRS_PER_TICK) {
 			chip.executeInstruction();
 		}
 		if (chip.ioState.displayDirty) {
-			writeln("Redrawing framebuffer.");
+			// writeln("Redrawing framebuffer.");
 			display.update(chip.fb.bitmap);
 			chip.ioState.displayDirty = false;
 		}
-		// writeln("Keypad: ", chip.ioState.keyDown);
+		chip.DT--;
+		chip.ST--;
+		chip.interruptOccurred = true;
 		Thread.sleep(1.msecs);
 	}
 	display.exit();

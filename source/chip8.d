@@ -42,12 +42,14 @@ struct Framebuffer {
 	// Return true if any pixel erasure occurs. (Pixel erasure: XORing the
 	// sprite onto the screen causes a pixel to change from 1 -> 0.)
 	bool drawSprite(ubyte[] sprBytes, ubyte x, ubyte y) {
-		ubyte xByteLeft = (x % (8 * BITMAP_W_BYTES)) / 8;
-		ubyte xByteRight = cast(ubyte) (xByteLeft + 1) % BITMAP_W_BYTES;
+        x %= LOGICAL_WIDTH;
+        y %= LOGICAL_HEIGHT;
+		ubyte xByteLeft = x / 8;
+		ubyte xByteRight = cast(ubyte) (xByteLeft + 1);
 		ubyte xByteOffset = x % 8;
 		bool causedPixelErasure = 0;
-		for (int i = 0; i < sprBytes.length; i++) {
-			auto y_i = (y + i) % BITMAP_H_PX;
+		for (int i = 0; i < sprBytes.length && y + i < LOGICAL_HEIGHT; i++) {
+			auto y_i = y + i;
 
 			// Left
 			ubyte sprByteLeft = sprBytes[i] >> xByteOffset;
@@ -55,9 +57,11 @@ struct Framebuffer {
 			bitmap[y_i][xByteLeft] ^= sprByteLeft;
 
 			// Right
-			ubyte sprByteRight = cast(ubyte) (sprBytes[i] << (8 - xByteOffset));
-			causedPixelErasure |= (bitmap[y_i][xByteRight] & sprByteRight) != 0;
-			bitmap[y_i][xByteRight] ^= sprByteRight;
+            if (xByteRight < BITMAP_W_BYTES) {
+                ubyte sprByteRight = cast(ubyte) (sprBytes[i] << (8 - xByteOffset));
+                causedPixelErasure |= (bitmap[y_i][xByteRight] & sprByteRight) != 0;
+                bitmap[y_i][xByteRight] ^= sprByteRight;
+            }
 		}
 		return causedPixelErasure;
 	}
@@ -67,6 +71,11 @@ struct IOState {
 	bool keepExecuting = true;
     bool displayDirty = false; // Set when bitmap is modified with Dxyn. Purpose is to signal a display update. NOT cleared by the CHIP-8.
 	ubyte[16] keyDown; // 1 when down, 0 when up.
+
+    // Default values cater to the original COSMAC VIP configuration.
+    bool useLegacyIncrement_I = true;
+    bool useLegacySetVxToVy = true;
+    bool useLegacySpriteInterrupt = true;
 }
 
 struct Chip8 {
@@ -81,6 +90,7 @@ struct Chip8 {
 
 	Framebuffer fb;
 	IOState ioState;
+    bool interruptOccurred = false;
 
 	Random rnd;
 
@@ -184,34 +194,43 @@ struct Chip8 {
 						break;
 					case 1:
 						V[x] |= V[y];
+                        V[0xF] = 0;
 						break;
 					case 2:
 						V[x] &= V[y];
+                        V[0xF] = 0;
 						break;
 					case 3:
 						V[x] ^= V[y];
+                        V[0xF] = 0;
 						break;
 					case 4:
 						auto sum = V[x] + V[y];
-						V[0xF] = sum > 255;
 						V[x] = cast(ubyte) sum;
+						V[0xF] = sum > 255;
 						break;
 					case 5:
-						V[0xF] = V[x] > V[y];
+						bool flag = V[x] >= V[y];
 						V[x] -= V[y];
+                        V[0xF] = flag;
 						break;
 					case 6:
-						V[0xF] = V[x] & 1;
+                        if (ioState.useLegacySetVxToVy) V[x] = V[y];
+						bool flag = V[x] & 1;
 						V[x] >>= 1;
+                        V[0xF] = flag;
 						break;
 					case 7:
-						V[0xF] = V[y] > V[x];
+						bool flag = V[y] >= V[x];
 						V[x] = cast(ubyte) (V[y] - V[x]);
-						break;
+						V[0xF] = flag; 
+                        break;
 					case 0xE:
-						V[0xF] = (V[x] >> 7) & 1;
+                        if (ioState.useLegacySetVxToVy) V[x] = V[y];
+						bool flag = (V[x] >> 7) & 1;
 						V[x] <<= 1;
-						break;
+						V[0xF] = flag;
+                        break;
 					default:
 						throw new Exception("Unrecognised 8-instruction.");
 				}
@@ -231,8 +250,13 @@ struct Chip8 {
 				V[x] = kk & uniform(0, 256, rnd);
 				break;
 			case 0xD000:
+                if (ioState.useLegacySpriteInterrupt && !interruptOccurred) {
+                    // Do not allow sprite drawing until the next interrupt occurs.
+                    return;
+                }
 				V[0xF] = fb.drawSprite(memory[I .. I + n], V[x], V[y]);
                 ioState.displayDirty = true;
+                interruptOccurred = false;
 				break;
             case 0xE000:
                 switch (kk) {
@@ -285,9 +309,11 @@ struct Chip8 {
                         break;
                     case 0x55:
                         memory[I .. I + (x + 1) * ubyte.sizeof] = V[0 .. x + 1];
+                        if (ioState.useLegacyIncrement_I) I += x + 1;
                         break;
                     case 0x65:
                         V[0 .. x + 1] = memory[I .. I + (x + 1)];
+                        if (ioState.useLegacyIncrement_I) I += x + 1;
                         break;
                     default:
                 }
