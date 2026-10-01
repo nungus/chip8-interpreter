@@ -279,7 +279,7 @@ struct Chip8 {
                         V[x] = DT;
                         break;
                     case 0x0A:
-                        auto keyInd = ioState.keyDown[].countUntil(1);
+                        auto keyInd = ioState.keyDown[].countUntil(2);
                         if (keyInd != -1) {
                             V[x] = cast(ubyte) keyInd;
                         } else {
@@ -320,6 +320,10 @@ struct Chip8 {
                 break;
 			default:
 				throw new Exception("The");
+		}
+		// Reset released keys.
+		foreach (ref key; ioState.keyDown) {
+			if (key == 2) key = 0;
 		}
 		PC += INSTR_SIZE;
 	}

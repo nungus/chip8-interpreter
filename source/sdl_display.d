@@ -118,7 +118,7 @@ class SdlDisplay : Display {
                     break;
                 case SDL_EVENT_KEY_UP:
                     if (event.key.scancode in scancodeToKeypad) {
-                        ioState.keyDown[scancodeToKeypad[event.key.scancode]] = 0;
+                        ioState.keyDown[scancodeToKeypad[event.key.scancode]] = 2;
                     }
                     break;
 				case SDL_EVENT_QUIT:
