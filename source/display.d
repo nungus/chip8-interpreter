@@ -8,6 +8,7 @@ import std.file;
 interface Display {
     bool init();
     void exit();
-    void update(ref ubyte[8][32] bitmap);
+    void update(ref ubyte[8][32] bitmap); // TODO: just put bitmap in IOState tbh? that's more consistent... OK maybe not actually since now i handle audio separately
+    void updateAudio(ref IOState ioState);
     void doEventPolling(ref IOState ioState);
 }

@@ -71,6 +71,7 @@ struct IOState {
 	bool keepExecuting = true;
     bool displayDirty = false; // Set when bitmap is modified with Dxyn. Purpose is to signal a display update. NOT cleared by the CHIP-8.
 	ubyte[16] keyDown; // 1 when down, 0 when up.
+	ubyte ST; // Sound timer.
 
     // Default values cater to the original COSMAC VIP configuration.
     bool useLegacyIncrement_I = true;
@@ -83,7 +84,6 @@ struct Chip8 {
 	ubyte[16] V; // Registers.
 	ushort I;
     ubyte DT; // Delay timer.
-    ubyte ST; // Sound timer.
 	ushort PC = ROM_MEMORY_BEGIN;
 	byte SP = -1;
 	ushort[16] stack;
@@ -292,7 +292,7 @@ struct Chip8 {
                         DT = V[x];
                         break;
                     case 0x18:
-                        ST = V[x];
+                        ioState.ST = V[x];
                         break;
                     case 0x1E:
                         I += V[x];

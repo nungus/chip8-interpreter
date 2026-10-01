@@ -44,8 +44,10 @@ int main(string[] args) {
 			display.update(chip.fb.bitmap);
 			chip.ioState.displayDirty = false;
 		}
+		
+		display.updateAudio(chip.ioState);
 		if (chip.DT > 0) chip.DT--;
-		if (chip.ST > 0) chip.ST--;
+		if (chip.ioState.ST > 0) chip.ioState.ST--;
 		chip.interruptOccurred = true;
 		
 		auto tickElapsedTime = MonoTime.currTime - tickBeginTime;
