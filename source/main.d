@@ -11,12 +11,12 @@ const int TICKS_PER_SEC = 60;
 int main(string[] args) {
 	const int instrsPerTick = INSTRS_PER_SEC / 60;
 	const Duration msPerTick = (1000 / TICKS_PER_SEC).msecs;
-	writeln("instrsPerTick: ", instrsPerTick);
-	writeln("msPerTick: ", msPerTick);
+	// writeln("instrsPerTick: ", instrsPerTick);
+	// writeln("msPerTick: ", msPerTick);
 
 	Chip8 chip = Chip8.create();
-	writeln("HELLO YELLO! I'm CHIPPY-8! >:D");
-	writeln("Soon, you'll see my true form... Octonary cephalic elegance and all...");
+	auto chippy = "CHIPPY-8 > HELLO YELLO!";
+	chippy = "CHIPPY-8 > MY... OCTONARY CEPHALOFORME.";
 	loadROM(chip, args[1]);
 	writeln("Loaded program.");
 
@@ -69,7 +69,7 @@ int main(string[] args) {
 		}
 	}
 	display.exit();
+	chippy = "CHIPPY-8 > A MISTRANSLATION... I WAS ALMOST THERE. WAIT ";
 	writeln("Program closed.");
-	writeln("A mistranslation? What are you talking about!?");
 	return 0;
 }

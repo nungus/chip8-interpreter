@@ -150,13 +150,13 @@ class SdlDisplay : Display {
                         ioState.keyDown[scancodeToKeypad[event.key.scancode]] = 1;
                     } else if (event.key.scancode == SDL_SCANCODE_I) {
                         ioState.useLegacyIncrement_I = !ioState.useLegacyIncrement_I;
-                        writeln("toggled I-increment: ", ioState.useLegacyIncrement_I, " (desired for legacy quirk: memory ON)");
+                        writeln("toggled I-increment: ", ioState.useLegacyIncrement_I, " (`true` desired for legacy quirk: memory ON)");
                     } else if (event.key.scancode == SDL_SCANCODE_O) {
                         ioState.useLegacySetVxToVy = !ioState.useLegacySetVxToVy;
-                        writeln("toggled SetVxToVy: ", ioState.useLegacySetVxToVy, " (desired for legacy quirk: shift OFF)");
+                        writeln("toggled SetVxToVy: ", ioState.useLegacySetVxToVy, " (`true` desired for legacy quirk: shift OFF)");
                     } else if (event.key.scancode == SDL_SCANCODE_P) {
                         ioState.useLegacySpriteInterrupt = !ioState.useLegacySpriteInterrupt;
-                        writeln("toggled SpriteInterrupt: ", ioState.useLegacySpriteInterrupt, " (desired for legacy quirk: Display wait ON)");
+                        writeln("toggled SpriteInterrupt: ", ioState.useLegacySpriteInterrupt, " (`true` desired for legacy quirk: Display wait ON)");
                     } else if (event.key.scancode == SDL_SCANCODE_ESCAPE) {
                         ioState.keepExecuting = false;
                     }
