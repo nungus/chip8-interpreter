@@ -10,7 +10,7 @@ This is a CHIP-8 interpreter written in D with SDL3 for the frontend (graphics, 
 ### Download and run
 [Download for Windows](https://github.com/nungus/chip8-interpreter/releases/latest).
 
-Unzip, and from a terminal in the `chip8-interpreter` directory, run:
+Unzip, and from a terminal in the unzipped directory, run:
 ```
 chip8-interpreter.exe path/to/game.ch8
 ```
